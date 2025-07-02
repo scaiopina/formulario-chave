@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Formulario de Acesso</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #f2f2f2;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      background-color: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      max-width: 400px;
+      width: 100%;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    #mensagem {
+      margin-bottom: 20px;
+      font-size: 16px;
+      color: #333;
+      text-align: center;
+    }
+
+    form label {
+      display: block;
+      margin-bottom: 10px;
+      font-weight: bold;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      margin-top: 4px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      box-sizing: border-box;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Formulario de Acesso</h2>
+    <div id="mensagem"></div>
+
+    <form id="formulario" style="display:none;">
+      <label for="nome">Nome:</label>
+      <input type="text" id="nome" required>
+
+      <label for="matricula">Matricula:</label>
+      <input type="text" id="matricula" required>
+
+      <label for="numero">Contato:</label>
+      <input type="text" id="numero" required>
+
+      <button type="submit">Enviar</button>
+    </form>
+  </div>
+
+  <script>
+    const url = 'https://esp32acesso-cf6a5-default-rtdb.firebaseio.com/acesso.json';
+
+    fetch(url)
+      .then(response => response.json())
+      .then(data => {
+        if (data && data.nome && data.numero) {
+          document.getElementById("mensagem").innerHTML =
+            `<strong>Aguarde a devolucao da chave.</strong><br><br>
+             <strong>Responsavel atual:</strong><br>
+             Nome: ${data.nome}<br>
+             Contato: ${data.numero}`;
+        } else {
+          document.getElementById("formulario").style.display = "block";
+        }
+      })
+      .catch(err => {
+        console.error("Erro ao verificar dados:", err);
+        document.getElementById("mensagem").innerHTML = "Erro ao conectar com o sistema.";
+      });
+
+    document.getElementById("formulario").addEventListener("submit", function(e) {
+      e.preventDefault();
+
+      const nome = document.getElementById("nome").value;
+      const matricula = document.getElementById("matricula").value;
+      const numero = document.getElementById("numero").value;
+
+      const dados = { nome, matricula, numero };
+
+      fetch(url, {
+        method: 'PUT',
+        body: JSON.stringify(dados),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(response => {
+        if (response.ok) {
+          alert("Dados enviados com sucesso!");
+          document.getElementById("formulario").reset();
+          document.getElementById("formulario").style.display = "none";
+          document.getElementById("mensagem").innerHTML =
+            `Chave reservada para voce.<br><br><strong>Nome:</strong> ${nome}<br><strong>Contato:</strong> ${numero}`;
+        } else {
+          alert("Erro ao enviar.");
+        }
+      })
+      .catch(error => {
+        console.error("Erro ao enviar:", error);
+        alert("Erro de conexao.");
+      });
+    });
+  </script>
+</body>
+</html>
